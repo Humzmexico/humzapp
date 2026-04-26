@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx shadcn@latest init --preset b68uAoPUcy --template next)",
+      "Bash(npx shadcn@latest init --preset b68uAoPUcy --template next --yes)",
+      "Bash(npx shadcn@latest init -y --preset b68uAoPUcy --template next)",
+      "PowerShell(cd \"C:\\\\Users\\\\cuadr\\\\OneDrive\\\\Documentos\\\\App Humz\\\\.claude\\\\worktrees\\\\jolly-banach-3414ac\"; $process = Start-Process -FilePath \"cmd.exe\" -ArgumentList \"/c npx shadcn@latest init --preset b68uAoPUcy --template next\" -RedirectStandardInput \"NUL\" -NoNewWindow -PassThru -Wait 2>&1; $process.ExitCode)",
+      "Bash(npx shadcn@latest init --help)",
+      "Bash(npx shadcn@latest init -y -f --preset b68uAoPUcy --template next)",
+      "Bash(winpty npx *)",
+      "mcp__9cdd0cd3-cdb1-4e61-8ad1-c85d157ccd6b__list_teams",
+      "Bash(npx vercel *)",
+      "Read(//c/Users/cuadr/.config/vercel/**)",
+      "Read(//c/Users/cuadr/AppData/Roaming/vercel/**)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('token',''\\)[:10]+'...'\\)\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:d.get\\(k\\) for k in ['id','name','link','error']}, indent=2\\)\\)\")",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('/c/Users/cuadr/AppData/Roaming/com.vercel.cli/Data/auth.json'\\)\\); print\\(list\\(d.keys\\(\\)\\)\\)\")",
+      "Bash(curl -s -X POST 'https://api.vercel.com/v13/deployments?teamId=team_Pc52KScF5Fl3q7OVYgwvBwUj' -H 'Authorization: Bearer vca_1CkPU6Qv2oHOIzfLBAxm5oWVljyhQFGrM0nUfjWQrf2uu5Sydl3xHKaX' -H 'Content-Type: application/json' -d '{ *)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:d.get\\(k\\) for k in ['id','url','state','readyState','error']}, indent=2\\)\\)\")",
+      "mcp__9cdd0cd3-cdb1-4e61-8ad1-c85d157ccd6b__get_deployment_build_logs",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)"
+    ]
+  }
+}

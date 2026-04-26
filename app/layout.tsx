@@ -1,5 +1,12 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { Inter, Manrope } from "next/font/google";
+import { cn } from "@/lib/utils";
+import { TooltipProvider } from "@/components/ui/tooltip";
+
+const manropeHeading = Manrope({subsets:['latin'],variable:'--font-heading'});
+
+const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: 'Humz - Business Operating System',
@@ -12,9 +19,9 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es">
+    <html lang="es" className={cn("font-sans", inter.variable, manropeHeading.variable)}>
       <body suppressHydrationWarning>
-        {children}
+        <TooltipProvider>{children}</TooltipProvider>
       </body>
     </html>
   )
