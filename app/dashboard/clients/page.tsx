@@ -1,55 +1,49 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { ClientForm } from '@/components/crm/client-form'
-import { ClientsTable } from '@/components/crm/clients-table'
 import { Plus } from 'lucide-react'
+import { Header } from '@/components/layout/header'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { ClientForm } from '@/components/clients/client-form'
+import { ClientsTable } from '@/components/clients/clients-table'
 
 export default function ClientsPage() {
   const [showForm, setShowForm] = useState(false)
-  const [refreshKey, setRefreshKey] = useState(0)
-
-  const handleClientCreated = () => {
-    setShowForm(false)
-    setRefreshKey(k => k + 1)
-  }
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
-          <p className="text-muted-foreground mt-2">Gestiona tu pipeline de clientes</p>
+    <>
+      <Header title="Clientes" />
+      <div className="flex flex-col gap-6 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">Pipeline de Clientes</h2>
+            <p className="text-sm text-muted-foreground">Gestiona leads, prospectos y clientes</p>
+          </div>
+          <Button size="sm" onClick={() => setShowForm(!showForm)}>
+            <Plus className="h-4 w-4 mr-1.5" />
+            Nuevo Cliente
+          </Button>
         </div>
-        <Button onClick={() => setShowForm(!showForm)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nuevo Cliente
-        </Button>
-      </div>
 
-      {showForm && (
+        {showForm && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Crear Cliente</CardTitle>
+              <CardDescription>Completa los datos del nuevo cliente o prospecto</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ClientForm onClose={() => setShowForm(false)} />
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
-          <CardHeader>
-            <CardTitle>Crear Cliente</CardTitle>
-            <CardDescription>Agrega un nuevo prospecto o cliente</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ClientForm onSuccess={handleClientCreated} />
+          <CardContent className="pt-6">
+            <ClientsTable />
           </CardContent>
         </Card>
-      )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Pipeline de Clientes</CardTitle>
-          <CardDescription>Todos tus clientes organizados por estado</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ClientsTable key={refreshKey} />
-        </CardContent>
-      </Card>
-    </div>
+      </div>
+    </>
   )
 }

@@ -2,66 +2,71 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
 import {
-  BarChart3,
-  Users,
-  MessageSquare,
-  DollarSign,
   LayoutDashboard,
+  Users,
+  DollarSign,
+  MessageSquare,
+  ChevronRight,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import type { AuthUser } from '@/lib/auth'
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/dashboard/finances', label: 'Finanzas', icon: DollarSign },
-  { href: '/dashboard/clients', label: 'Clientes', icon: Users },
-  { href: '/dashboard/messages', label: 'Mensajes', icon: MessageSquare },
+  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Clientes', href: '/dashboard/clients', icon: Users },
+  { label: 'Finanzas', href: '/dashboard/finances', icon: DollarSign },
+  { label: 'Mensajes', href: '/dashboard/messages', icon: MessageSquare },
 ]
 
-export function Sidebar() {
+export function Sidebar({ user }: { user: AuthUser }) {
   const pathname = usePathname()
 
   return (
-    <div className="w-64 border-r border-border bg-card flex flex-col">
+    <aside className="flex h-screen w-60 flex-col border-r bg-white">
       {/* Logo */}
-      <div className="h-16 border-b border-border flex items-center px-6">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <BarChart3 className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <h1 className="font-bold text-xl">Humz</h1>
+      <div className="flex h-14 items-center gap-2 border-b px-5">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground text-background text-xs font-bold">
+          H
         </div>
+        <span className="text-sm font-semibold">Humz</span>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
-        {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.href)
+      {/* Nav */}
+      <nav className="flex flex-1 flex-col gap-1 p-3">
+        {navItems.map(({ label, href, icon: Icon }) => {
+          const active = pathname === href
           return (
             <Link
-              key={item.href}
-              href={item.href}
+              key={href}
+              href={href}
               className={cn(
-                'flex items-center gap-3 px-4 py-2 rounded-lg transition-colors',
-                isActive
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-foreground hover:bg-muted'
+                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                active
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
               )}
             >
-              <item.icon className="w-4 h-4" />
-              <span>{item.label}</span>
+              <Icon className="h-4 w-4 shrink-0" />
+              {label}
+              {active && <ChevronRight className="ml-auto h-3 w-3 opacity-50" />}
             </Link>
           )
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-border">
-        <div className="text-xs text-muted-foreground">
-          <p>Humz v0.1.0</p>
-          <p>SaaS Operating System</p>
+      {/* User */}
+      <div className="border-t p-3">
+        <div className="flex items-center gap-3 rounded-md px-3 py-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-medium uppercase">
+            {user.name.charAt(0)}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium leading-none">{user.name}</p>
+            <p className="truncate text-xs text-muted-foreground mt-0.5">{user.email}</p>
+          </div>
         </div>
       </div>
-    </div>
+    </aside>
   )
 }

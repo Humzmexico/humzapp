@@ -1,18 +1,16 @@
-import { AppSidebar } from "@/components/app-sidebar"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { Sidebar } from '@/components/layout/sidebar'
+import { getCurrentUser } from '@/lib/auth'
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const user = await getCurrentUser()
+  const safeUser = user ?? { id: '', name: 'Usuario', email: '' }
+
   return (
-    <SidebarProvider
-      style={{
-        "--sidebar-width": "calc(var(--spacing) * 72)",
-        "--header-height": "calc(var(--spacing) * 12)",
-      } as React.CSSProperties}
-    >
-      <AppSidebar variant="inset" />
-      <SidebarInset>
+    <div className="flex h-screen overflow-hidden bg-background">
+      <Sidebar user={safeUser} />
+      <main className="flex flex-1 flex-col overflow-y-auto">
         {children}
-      </SidebarInset>
-    </SidebarProvider>
+      </main>
+    </div>
   )
 }

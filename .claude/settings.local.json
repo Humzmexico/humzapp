@@ -20,7 +20,14 @@
       "mcp__9cdd0cd3-cdb1-4e61-8ad1-c85d157ccd6b__get_deployment_build_logs",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(del \"components\\\\layout\\\\sidebar.tsx\" \"components\\\\layout\\\\topbar.tsx\" \"components\\\\dashboard\\\\revenue-chart.tsx\" \"components\\\\dashboard\\\\clients-growth-chart.tsx\")",
+      "Bash(npm run *)",
+      "Bash(grep -E \"^sonner$|^radix-ui$\")",
+      "Bash(npm install *)",
+      "Bash(npm uninstall *)",
+      "Bash(npx shadcn@latest add button card input label select badge table skeleton separator avatar dropdown-menu sonner tooltip --yes)",
+      "Bash(npx shadcn@latest add chart --yes)"
     ]
   }
 }

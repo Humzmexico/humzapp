@@ -1,58 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { getCurrentOrganization } from '@/lib/auth'
 import { z } from 'zod'
+import { db } from '@/lib/db'
+import { getCurrentOrgId } from '@/lib/auth'
 
-const messageSchema = z.object({
-  clientId: z.string().min(1),
+const schema = z.object({
+  clientId: z.string(),
   channel: z.enum(['WHATSAPP', 'EMAIL', 'SMS', 'OTHER']),
   direction: z.enum(['INBOUND', 'OUTBOUND']),
   content: z.string().min(1),
-  createdAt: z.string().datetime().optional(),
 })
 
-export async function GET(request: NextRequest) {
-  try {
-    const orgId = await getCurrentOrganization()
-    if (!orgId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET() {
+  const orgId = await getCurrentOrgId()
+  if (!orgId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const messages = await prisma.message.findMany({
-      where: { organizationId: orgId },
-      include: { client: true },
-      orderBy: { createdAt: 'desc' },
-      take: 100,
-    })
+  const messages = await db.message.findMany({
+    where: { organizationId: orgId },
+    include: { client: { select: { name: true } } },
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+  })
 
-    return NextResponse.json(messages)
-  } catch (error) {
-    console.error('Messages GET error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
+  return NextResponse.json(messages)
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const orgId = await getCurrentOrganization()
-    if (!orgId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function POST(req: NextRequest) {
+  const orgId = await getCurrentOrgId()
+  if (!orgId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const body = await request.json()
-    const data = messageSchema.parse(body)
-
-    const message = await prisma.message.create({
-      data: {
-        ...data,
-        organizationId: orgId,
-        createdAt: data.createdAt ? new Date(data.createdAt) : new Date(),
-      },
-      include: { client: true },
-    })
-
-    return NextResponse.json(message, { status: 201 })
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
-    }
-    console.error('Messages POST error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  const body = await req.json()
+  const parsed = schema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
   }
+
+  const message = await db.message.create({
+    data: { ...parsed.data, organizationId: orgId },
+    include: { client: { select: { name: true } } },
+  })
+
+  return NextResponse.json(message, { status: 201 })
 }

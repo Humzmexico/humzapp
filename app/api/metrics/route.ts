@@ -1,98 +1,57 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { getCurrentOrganization } from '@/lib/auth'
-import { startOfMonth, endOfMonth, subMonths } from 'date-fns'
+import { NextResponse } from 'next/server'
+import { startOfMonth, endOfMonth } from 'date-fns'
+import { db } from '@/lib/db'
+import { getCurrentOrgId } from '@/lib/auth'
 
-export async function GET(request: NextRequest) {
-  try {
-    const orgId = await getCurrentOrganization()
-    if (!orgId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export async function GET() {
+  const orgId = await getCurrentOrgId()
+  if (!orgId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const now = new Date()
-    const monthStart = startOfMonth(now)
-    const monthEnd = endOfMonth(now)
+  const now = new Date()
+  const monthStart = startOfMonth(now)
+  const monthEnd = endOfMonth(now)
 
-    // Monthly revenue (income transactions)
-    const monthlyRevenue = await prisma.financialTransaction.aggregate({
-      where: {
-        organizationId: orgId,
-        type: 'INCOME',
-        transactionDate: {
-          gte: monthStart,
-          lte: monthEnd,
-        },
-      },
+  const [income, expenses, totalClients, newClients, messages] = await Promise.all([
+    db.financialTransaction.aggregate({
+      where: { organizationId: orgId, type: 'INCOME', transactionDate: { gte: monthStart, lte: monthEnd } },
       _sum: { amount: true },
-    })
-
-    // Monthly expenses
-    const monthlyExpenses = await prisma.financialTransaction.aggregate({
-      where: {
-        organizationId: orgId,
-        type: 'EXPENSE',
-        transactionDate: {
-          gte: monthStart,
-          lte: monthEnd,
-        },
-      },
+    }),
+    db.financialTransaction.aggregate({
+      where: { organizationId: orgId, type: { in: ['EXPENSE', 'COST'] }, transactionDate: { gte: monthStart, lte: monthEnd } },
       _sum: { amount: true },
-    })
-
-    // Total clients
-    const totalClients = await prisma.client.count({
+    }),
+    db.client.count({ where: { organizationId: orgId } }),
+    db.client.count({ where: { organizationId: orgId, createdAt: { gte: monthStart, lte: monthEnd } } }),
+    db.message.findMany({
       where: { organizationId: orgId },
-    })
-
-    // New clients this month
-    const newClientsThisMonth = await prisma.client.count({
-      where: {
-        organizationId: orgId,
-        createdAt: {
-          gte: monthStart,
-          lte: monthEnd,
-        },
-      },
-    })
-
-    // Average response time (simple calculation: inbound to outbound time)
-    const messages = await prisma.message.findMany({
-      where: { organizationId: orgId },
+      select: { clientId: true, direction: true, createdAt: true },
       orderBy: { createdAt: 'asc' },
-    })
+    }),
+  ])
 
-    let totalResponseTime = 0
-    let responseCount = 0
-
-    for (let i = 0; i < messages.length - 1; i++) {
-      if (
-        messages[i].direction === 'INBOUND' &&
-        messages[i + 1].direction === 'OUTBOUND' &&
-        messages[i].clientId === messages[i + 1].clientId
-      ) {
-        const responseTime = (messages[i + 1].createdAt.getTime() - messages[i].createdAt.getTime()) / (1000 * 60)
-        totalResponseTime += responseTime
-        responseCount++
-      }
+  // Average response time: INBOUND → next OUTBOUND for same client
+  let totalMs = 0
+  let count = 0
+  for (let i = 0; i < messages.length - 1; i++) {
+    if (
+      messages[i].direction === 'INBOUND' &&
+      messages[i + 1].direction === 'OUTBOUND' &&
+      messages[i].clientId === messages[i + 1].clientId
+    ) {
+      totalMs += messages[i + 1].createdAt.getTime() - messages[i].createdAt.getTime()
+      count++
     }
-
-    const averageResponseTime = responseCount > 0 ? totalResponseTime / responseCount : 0
-
-    const revenue = monthlyRevenue._sum.amount?.toNumber() || 0
-    const expenses = monthlyExpenses._sum.amount?.toNumber() || 0
-    const profit = revenue - expenses
-
-    return NextResponse.json({
-      monthlyRevenue: revenue,
-      monthlyExpenses: expenses,
-      monthlyProfit: profit,
-      totalClients,
-      newClientsThisMonth,
-      averageResponseTime,
-    })
-  } catch (error) {
-    console.error('Metrics error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
+
+  const monthlyRevenue = income._sum.amount?.toNumber() ?? 0
+  const monthlyExpenses = expenses._sum.amount?.toNumber() ?? 0
+
+  return NextResponse.json({
+    monthlyRevenue,
+    monthlyExpenses,
+    monthlyProfit: monthlyRevenue - monthlyExpenses,
+    totalClients,
+    newClientsThisMonth: newClients,
+    avgResponseMinutes: count > 0 ? Math.round(totalMs / count / 60000) : 0,
+  })
 }

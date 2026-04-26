@@ -1,23 +1,34 @@
-import { ChartAreaInteractive } from "@/components/chart-area-interactive"
-import { DataTable } from "@/components/data-table"
-import { SectionCards } from "@/components/section-cards"
-import { SiteHeader } from "@/components/site-header"
+import { Header } from '@/components/layout/header'
+import { MetricsCards } from '@/components/dashboard/metrics-cards'
+import { RevenueChart } from '@/components/dashboard/revenue-chart'
+import { RecentClients } from '@/components/dashboard/recent-clients'
+import { RecentMessages } from '@/components/dashboard/recent-messages'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-import data from "./data.json"
-
-export default function Page() {
+export default function DashboardPage() {
   return (
     <>
-      <SiteHeader />
-      <div className="flex flex-1 flex-col">
-        <div className="@container/main flex flex-1 flex-col gap-2">
-          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-            <SectionCards />
-            <div className="px-4 lg:px-6">
-              <ChartAreaInteractive />
-            </div>
-            <DataTable data={data} />
-          </div>
+      <Header title="Dashboard" />
+      <div className="flex flex-col gap-6 p-6">
+        <MetricsCards />
+        <RevenueChart />
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">Clientes Recientes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RecentClients />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">Mensajes Recientes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RecentMessages />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </>

@@ -1,21 +1,18 @@
-// Mock authentication - replace with NextAuth.js or similar in production
-// For MVP, we use a default organization ID from environment
+// Swap this file for Clerk/NextAuth without touching anything else.
+// Only these two functions need to keep working with the same signatures.
 
-export async function getCurrentOrganization(): Promise<string | null> {
-  // In production, this would:
-  // 1. Get the session from NextAuth
-  // 2. Get the user's default organization
-  // 3. Validate the organization membership
-
-  // For now, return a hardcoded org ID for development
-  return process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || null
+export type AuthUser = {
+  id: string
+  name: string
+  email: string
 }
 
-export async function getCurrentUser() {
-  // Mock user
-  return {
-    id: 'user_1',
-    email: 'demo@humz.app',
-    name: 'Demo User',
-  }
+export async function getCurrentUser(): Promise<AuthUser | null> {
+  // TODO: replace with real auth — e.g. `const { userId } = await auth()` from Clerk
+  return { id: 'user_1', name: 'Demo User', email: 'demo@humz.app' }
+}
+
+export async function getCurrentOrgId(): Promise<string | null> {
+  // TODO: replace with real org from session
+  return process.env.NEXT_PUBLIC_DEFAULT_ORG_ID ?? null
 }

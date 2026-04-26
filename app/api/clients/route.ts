@@ -1,53 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { getCurrentOrganization } from '@/lib/auth'
 import { z } from 'zod'
+import { db } from '@/lib/db'
+import { getCurrentOrgId } from '@/lib/auth'
 
-const clientSchema = z.object({
+const schema = z.object({
   name: z.string().min(1),
-  email: z.string().email().optional().nullable(),
-  phone: z.string().optional().nullable(),
+  email: z.string().email().optional().or(z.literal('')),
+  phone: z.string().optional(),
   status: z.enum(['LEAD', 'PROSPECT', 'CLIENT', 'INACTIVE']).default('LEAD'),
 })
 
-export async function GET(request: NextRequest) {
-  try {
-    const orgId = await getCurrentOrganization()
-    if (!orgId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET() {
+  const orgId = await getCurrentOrgId()
+  if (!orgId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const clients = await prisma.client.findMany({
-      where: { organizationId: orgId },
-      orderBy: { createdAt: 'desc' },
-    })
+  const clients = await db.client.findMany({
+    where: { organizationId: orgId },
+    orderBy: { createdAt: 'desc' },
+  })
 
-    return NextResponse.json(clients)
-  } catch (error) {
-    console.error('Clients GET error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
+  return NextResponse.json(clients)
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const orgId = await getCurrentOrganization()
-    if (!orgId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function POST(req: NextRequest) {
+  const orgId = await getCurrentOrgId()
+  if (!orgId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const body = await request.json()
-    const data = clientSchema.parse(body)
-
-    const client = await prisma.client.create({
-      data: {
-        ...data,
-        organizationId: orgId,
-      },
-    })
-
-    return NextResponse.json(client, { status: 201 })
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
-    }
-    console.error('Clients POST error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  const body = await req.json()
+  const parsed = schema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
   }
+
+  const client = await db.client.create({
+    data: { ...parsed.data, organizationId: orgId },
+  })
+
+  return NextResponse.json(client, { status: 201 })
 }

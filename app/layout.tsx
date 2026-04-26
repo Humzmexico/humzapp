@@ -1,27 +1,21 @@
 import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
-import { Inter, Manrope } from "next/font/google";
-import { cn } from "@/lib/utils";
-import { TooltipProvider } from "@/components/ui/tooltip";
 
-const manropeHeading = Manrope({subsets:['latin'],variable:'--font-heading'});
-
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
 export const metadata: Metadata = {
-  title: 'Humz - Business Operating System',
-  description: 'Centro operativo para negocios de servicios y pequeñas empresas',
+  title: 'Humz',
+  description: 'Sistema operativo para tu negocio',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={cn("font-sans", inter.variable, manropeHeading.variable)}>
-      <body suppressHydrationWarning>
-        <TooltipProvider>{children}</TooltipProvider>
+    <html lang="es">
+      <body className={`${inter.variable} font-sans antialiased`}>
+        {children}
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   )
