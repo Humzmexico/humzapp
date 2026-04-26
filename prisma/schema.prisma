@@ -1,0 +1,144 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Users
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  memberships   Membership[]
+  ownedOrgs     Organization[]
+
+  @@map("users")
+}
+
+// Organizations (multi-tenant)
+model Organization {
+  id            String    @id @default(cuid())
+  name          String
+  ownerId       String
+  owner         User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  memberships          Membership[]
+  clients              Client[]
+  messages             Message[]
+  financialTransactions FinancialTransaction[]
+
+  @@map("organizations")
+}
+
+// Organization Memberships
+model Membership {
+  id               String    @id @default(cuid())
+  userId           String
+  organizationId   String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt        DateTime  @default(now())
+
+  @@unique([userId, organizationId])
+  @@map("memberships")
+}
+
+// Clients (CRM)
+model Client {
+  id               String    @id @default(cuid())
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  name             String
+  email            String?
+  phone            String?
+  status           ClientStatus @default(LEAD)
+
+  messages         Message[]
+  transactions     FinancialTransaction[]
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([organizationId])
+  @@map("clients")
+}
+
+enum ClientStatus {
+  LEAD
+  PROSPECT
+  CLIENT
+  INACTIVE
+}
+
+// Messages (Communication)
+model Message {
+  id               String    @id @default(cuid())
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  clientId         String
+  client           Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  channel          MessageChannel
+  direction        MessageDirection
+  content          String
+
+  createdAt        DateTime  @default(now())
+
+  @@index([organizationId])
+  @@index([clientId])
+  @@map("messages")
+}
+
+enum MessageChannel {
+  WHATSAPP
+  EMAIL
+  SMS
+  OTHER
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+// Financial Transactions (Finances)
+model FinancialTransaction {
+  id               String    @id @default(cuid())
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  clientId         String?
+  client           Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  type             TransactionType
+  amount           Decimal
+  category         String
+  description      String?
+
+  transactionDate  DateTime
+  createdAt        DateTime  @default(now())
+
+  @@index([organizationId])
+  @@index([clientId])
+  @@index([transactionDate])
+  @@map("financial_transactions")
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  COST
+}
